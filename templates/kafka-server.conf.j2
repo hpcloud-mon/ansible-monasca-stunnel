@@ -1,0 +1,33 @@
+; File with certificate and private key
+cert = {{kafka_server_cert}}
+key = {{kafka_server_cert}}
+
+; Log (1= minimal, 5=recommended, 7=all) and log file)
+; Preceed with a “;” to disable logging
+debug = 1
+output = /var/log/stunnel4/kafka-server.log
+
+; Some performance tuning
+socket = l:TCP_NODELAY=1
+socket = r:TCP_NODELAY=1
+
+; Data compression algorithm: zlib or rle
+;compression = zlib
+
+; SSL bug options / NO SSL:v2 (SSLv3 and TLSv1 is enabled)
+options = ALL
+options = NO_SSLv2
+;options = NO_SSLv3
+verify = 2
+cafile = {{stunnel_cacert}}
+
+pid = /var/run/stunnel-kafka-server.pid
+
+[kafka-server]
+accept = {{kafka_stunnel_server_port}}
+{% if kafka_listen_address is defined %}
+connect = {{kafka_listen_address}}:9092
+{% else %}
+connect = 127.0.0.1:9092
+{% endif %}
+

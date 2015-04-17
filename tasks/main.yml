@@ -1,0 +1,70 @@
+---
+# Override some variables
+- set_fact:
+    kafka_stunnel_backend_hosts: "{{kafka_hosts|regex_replace(':.*',':{{kafka_stunnel_server_port}}')}}"
+    kafka_hosts: 127.0.0.1:{{kafka_stunnel_client_port}}
+    is_stunnel_enabled: true
+  when: enable_stunnel.kafka_client|bool and kafka_hosts is defined
+
+- set_fact:
+    zookeeper_stunnel_backend_hosts: "{{zookeeper_hosts|regex_replace(':.*',':{{zookeeper_stunnel_server_port}}')}}"
+    zookeeper_stunnel_backend_port: "{{zookeeper_stunnel_client_port}}"
+    zookeeper_hosts: 127.0.0.1:{{zookeeper_stunnel_client_port}}
+    is_stunnel_enabled: true
+  when: enable_stunnel.zookeeper_server|bool or enabled_stunnel.zookeeper_client|bool and zookeeper_hosts is defined
+
+- set_fact:
+    is_stunnel_enabled: true
+  when: enable_stunnel.kafka_server|bool
+
+- name: Install stunnel
+  apt: name=stunnel4 state=present
+  when: is_stunnel_enabled|bool
+
+
+- name: Install Kafka server certificate
+  copy: src={{kafka_server_cert_src}} dest={{kafka_server_cert}} mode=600
+  when: enable_stunnel.kafka_server|bool
+
+- name: Install Kafka client certificate
+  copy: src={{kafka_client_cert_src}} dest={{kafka_client_cert}} mode=600
+  when: enable_stunnel.kafka_client|bool
+
+- name: Install Zookeeper server certificate
+  copy: src={{zookeeper_server_cert_src}} dest={{zookeeper_server_cert}} mode=600
+  when: enable_stunnel.zookeeper_server|bool
+
+- name: Install Zookeeper client certificate
+  copy: src={{zookeeper_client_cert_src}} dest={{zookeeper_client_cert}} mode=600
+  when: enable_stunnel.zookeeper_client|bool
+
+- name: Install CA certificate
+  copy: src={{stunnel_cacert_src}} dest={{stunnel_cacert}} mode=644
+  when: is_stunnel_enabled|bool and stunnel_cacert_src is defined
+
+
+- name: Enable stunnel
+  replace: dest=/etc/default/stunnel4 regexp='^ENABLED=0$' replace='ENABLED=1' backup=no
+  when: is_stunnel_enabled|bool
+  notify: restart stunnel
+
+- name: Set up kafka server configuration
+  template: dest="{{stunnel_dir}}/kafka-server.conf" owner=root group=root mode=644 src=kafka-server.conf.j2
+  when: enable_stunnel.kafka_server|bool
+  notify: restart stunnel
+
+- name: Set up kafka client configuration
+  template: dest="{{stunnel_dir}}/kafka-client.conf" owner=root group=root mode=644 src=kafka-client.conf.j2
+  when: enable_stunnel.kafka_client|bool
+  notify: restart stunnel
+
+- name: Set up zookeeper server configuration
+  template: dest="{{stunnel_dir}}/zookeeper-server.conf" owner=root group=root mode=644 src=zookeeper-server.conf.j2
+  when: enable_stunnel.zookeeper_server|bool
+  notify: restart stunnel
+
+- name: Set up zookeeper client configuration
+  template: dest="{{stunnel_dir}}/zookeeper-client.conf" owner=root group=root mode=644 src=zookeeper-client.conf.j2
+  when: enable_stunnel.zookeeper_client|bool
+  notify: restart stunnel
+

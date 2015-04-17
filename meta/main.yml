@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  author: David Schroeder
+  description: Configures stunnel encryption for kafka and zookeeper
+  company: HP
+  license: Apache
+  min_ansible_version: 1.2
+  platforms:
+  - name: Ubuntu
+    versions:
+    - all
+  categories:
+  - networking

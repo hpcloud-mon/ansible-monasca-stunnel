@@ -1,0 +1,32 @@
+---
+# Stunnel configuration is disabled by default.
+enable_stunnel:
+  kafka_server: false
+  kafka_client: false
+  zookeeper_server: false
+  zookeeper_client: false
+
+# Location of stunnel config files (/etc/stunnel is Debian/Ubuntu's default)
+stunnel_dir: /etc/stunnel
+
+# SSL certificates.  The cert and key should be combined into one file.
+kafka_server_cert: "{{stunnel_dir}}/kafka-server.pem"
+kafka_server_cert_src: CA/{{ansible_hostname}}_kafka_server_combined.pem
+kafka_client_cert: "{{stunnel_dir}}/kafka-client.pem"
+kafka_client_cert_src: CA/{{ansible_hostname}}_kafka_client_combined.pem
+
+zookeeper_server_cert: "{{stunnel_dir}}/zookeeper-server.pem"
+zookeeper_server_cert_src: CA/{{ansible_hostname}}_zookeeper_server_combined.pem
+zookeeper_client_cert: "{{stunnel_dir}}/zookeeper-client.pem"
+zookeeper_client_cert_src: CA/{{ansible_hostname}}_zookeeper_client_combined.pem
+
+stunnel_cacert: "{{stunnel_dir}}/stunnel-cacert.pem"
+stunnel_cacert_src: CA/cacert.pem
+
+# Ports for the stunnel-ized kafka/zookeeper server/client connections
+kafka_stunnel_server_port: 19092
+kafka_stunnel_client_port: 29092
+zookeeper_stunnel_server_port: 12181
+zookeeper_stunnel_client_port: 22181
+
+
